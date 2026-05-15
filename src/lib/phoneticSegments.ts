@@ -1,11 +1,7 @@
 import type { AppLanguage } from "@/lib/language";
 
 export type PhoneticSegment = {
-  /** Letra o grupo (sh, ch, rr) */
   grapheme: string;
-  /** Texto visual repetido: ddddd… */
-  display: string;
-  /** Clave para el audio del fonema */
   soundLetter: string;
 };
 
@@ -27,16 +23,6 @@ const ENGLISH_DIGRAPHS = [
 ];
 
 const SPANISH_DIGRAPHS = ["ch", "ll", "rr", "qu", "gu"];
-
-function isVowel(ch: string): boolean {
-  return /[aeiouáéíóúü]/i.test(ch);
-}
-
-function repeatGrapheme(grapheme: string, vowel: boolean): string {
-  const g = grapheme.toLowerCase();
-  const count = vowel ? 20 : 16;
-  return g.repeat(count);
-}
 
 function nextGrapheme(
   word: string,
@@ -69,13 +55,9 @@ function splitToSegments(
       continue;
     }
 
-    const vowel = isVowel(grapheme[0]);
-    const soundLetter = grapheme[0].toLowerCase();
-
     segments.push({
       grapheme,
-      display: repeatGrapheme(grapheme, vowel),
-      soundLetter,
+      soundLetter: grapheme[0].toLowerCase(),
     });
     i = next;
   }
@@ -83,7 +65,6 @@ function splitToSegments(
   return segments;
 }
 
-/** Fonemas en orden (d→a→d), no deletreo (d→a→d como nombres). */
 export function toPhoneticSegments(
   word: string,
   lang: AppLanguage,
@@ -91,9 +72,10 @@ export function toPhoneticSegments(
   const segments = splitToSegments(word, lang);
   if (segments.length > 0) return segments;
 
-  return [...word].map((ch) => ({
-    grapheme: ch,
-    display: repeatGrapheme(ch, isVowel(ch)),
-    soundLetter: ch.toLowerCase(),
-  }));
+  return [...word]
+    .filter((ch) => /[a-záéíóúñü]/i.test(ch))
+    .map((ch) => ({
+      grapheme: ch,
+      soundLetter: ch.toLowerCase(),
+    }));
 }

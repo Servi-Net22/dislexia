@@ -97,8 +97,8 @@ export function HomeWorkspace() {
           )}
           <ul className="rounded-xl bg-sky-50/80 px-4 py-3 text-sm text-sky-800">
             <li>· Auto: palabras con ñ/acentos → español; solo letras latinas → inglés</li>
-            <li>· Cada fila repite el sonido (dddd, aaaa) — no deletreo D-A-D</li>
-            <li>· Toca una fila para escuchar ese fonema</li>
+            <li>· Palabra con sílabas en color; botones por cada sonido</li>
+            <li>· «Pronunciar fonéticamente» une los fonemas en orden</li>
           </ul>
         </aside>
       </div>

@@ -44,13 +44,7 @@ export function DictationCard({
         {lang === "en" ? "Phonetic dictation" : "Dictado fonético"}
       </p>
 
-      <PhoneticDisplay
-        wordId={word.id}
-        wordText={word.text}
-        segments={phonetics}
-        lang={lang}
-        compact={compact}
-      />
+      <PhoneticDisplay word={word} segments={phonetics} compact={compact} />
 
       <button
         type="button"

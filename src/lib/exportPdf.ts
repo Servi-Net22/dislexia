@@ -15,26 +15,40 @@ export function buildCardHtml(
       ? word.phonetics
       : toPhoneticSegments(word.text, lang);
 
-  const rowStyle =
-    "width:100%;padding:10px 16px;margin:6px 0;border-radius:14px;border:2px solid #fff;background:rgba(255,255,255,0.65);font-size:22px;font-weight:bold;font-family:OpenDyslexic,sans-serif;letter-spacing:-0.02em;overflow:hidden;white-space:nowrap";
+  const syllables = word.syllables.length > 0 ? word.syllables : [word.text];
+  const wordHtml = syllables
+    .map((syl, sIdx) => {
+      const color = SYLLABLE_COLORS[sIdx % SYLLABLE_COLORS.length];
+      const chars = [...syl]
+        .map(
+          (ch) =>
+            `<span style="color:${color};font-size:56px;font-weight:bold">${ch}</span>`,
+        )
+        .join("");
+      return `<span style="display:inline-flex;margin:0 4px">${chars}</span>`;
+    })
+    .join("");
 
-  const phoneticHtml = phonetics
+  const phonemeChips = phonetics
     .map((seg, idx) => {
       const color = SYLLABLE_COLORS[idx % SYLLABLE_COLORS.length];
-      return `<div style="${rowStyle};color:${color}">${seg.display}</div>`;
+      return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:48px;padding:8px 14px;margin:4px;border:2px solid #fff;border-radius:12px;background:rgba(255,255,255,0.8);font-size:28px;font-weight:bold;color:${color}">${seg.grapheme}</span>`;
     })
     .join("");
 
   const title = lang === "en" ? "Phonetic dictation" : "Dictado fonético";
 
   return [
-    '<article style="position:relative;width:700px;min-height:420px;padding:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:4px solid #bae6fd;border-radius:24px;background:linear-gradient(180deg,#f8f4e8,#eef6fa);font-family:OpenDyslexic,\'Segoe UI\',sans-serif;box-sizing:border-box">',
-    `<span style="position:absolute;top:16px;right:16px;background:#e0f2fe;color:#0c4a6e;padding:4px 12px;border-radius:999px;font-size:14px;font-weight:600">${index + 1} / ${total}</span>`,
-    `<p style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:0.2em;color:#0369a1">${title}</p>`,
-    `<p style="font-size:42px;font-weight:bold;color:#0c4a6e;margin:8px 0">${word.text}</p>`,
-    `<div style="width:90%;max-width:520px">${phoneticHtml}</div>`,
+    '<article style="position:relative;width:700px;min-height:420px;padding:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:4px solid #bae6fd;border-radius:24px;background:linear-gradient(180deg,#f8f4e8,#eef6fa);font-family:OpenDyslexic,\'Segoe UI\',sans-serif">',
+    `<span style="position:absolute;top:16px;right:16px;background:#e0f2fe;padding:4px 12px;border-radius:999px;font-size:14px">${index + 1} / ${total}</span>`,
+    `<p style="font-size:12px;text-transform:uppercase;color:#0369a1">${title}</p>`,
+    `<div style="margin:16px 0">${wordHtml}</div>`,
+    `<p style="font-size:14px;color:#0369a1;margin-bottom:8px">${lang === "en" ? "Sounds:" : "Sonidos:"}</p>`,
+    `<div style="display:flex;flex-wrap:wrap;justify-content:center">${phonemeChips}</div>`,
+    `<p style="margin-top:16px;font-size:16px;color:#5b21b6">${lang === "en" ? "Pronounce phonetically" : "Pronunciar fonéticamente"}</p>`,
     "</article>",
-  ].join("");
+  ]
+    .join("")
 }
 
 export async function exportDictationToPdf(
