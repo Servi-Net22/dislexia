@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { unlockAudio, preloadPhonemes } from "@/lib/phonemes";
-import { preloadVoices } from "@/lib/speech";
+import { preloadVoices } from "@/lib/speechSync";
 
 type AudioProviderProps = {
   children: React.ReactNode;

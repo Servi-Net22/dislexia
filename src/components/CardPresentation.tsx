@@ -5,7 +5,7 @@ import type { DictationWord } from "@/types/dictation";
 import { DictationCard } from "@/components/DictationCard";
 import { ExportPdfButton } from "@/components/ExportPdfButton";
 import { preloadPhonemes } from "@/lib/phonemes";
-import { preloadVoices } from "@/lib/speech";
+import { preloadVoices } from "@/lib/speechSync";
 
 type CardPresentationProps = {
   words: DictationWord[];

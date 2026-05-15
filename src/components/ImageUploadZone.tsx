@@ -20,6 +20,7 @@ export function ImageUploadZone({
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
 
   const processFile = useCallback(
     async (file: File) => {
@@ -29,6 +30,7 @@ export function ImageUploadZone({
       }
 
       setError(null);
+      setHint(null);
       setLoading(true);
       setProgress(0);
 
@@ -41,6 +43,10 @@ export function ImageUploadZone({
         if (!text.trim()) {
           setError(
             "No se detectó texto. Prueba otra foto con buena luz o escribe las palabras a mano.",
+          );
+        } else {
+          setHint(
+            "Revisa la lista y corrige si hace falta. Mejor foto: buena luz, texto grande, sin inclinar.",
           );
         }
       } catch {
@@ -123,6 +129,11 @@ export function ImageUploadZone({
         }}
       />
 
+      {hint && (
+        <p className="mt-3 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-900">
+          {hint}
+        </p>
+      )}
       {error && (
         <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
           {error}
