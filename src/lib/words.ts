@@ -2,6 +2,7 @@ import type { DictationWord } from "@/types/dictation";
 import type { AppLanguage, LanguageMode } from "@/lib/language";
 import { detectWordLanguage, resolveWordLanguage } from "@/lib/language";
 import { splitEnglishSyllables } from "@/lib/englishSyllables";
+import { toPhoneticSegments } from "@/lib/phoneticSegments";
 import { splitSpanishSyllables } from "@/lib/spanishSyllables";
 
 export function parseWordsFromText(text: string): string[] {
@@ -36,6 +37,7 @@ export function toDictationWords(
         id: `word-${index}-${lang}-${text.toLowerCase()}`,
         text,
         syllables: splitSyllables(text, lang),
+        phonetics: toPhoneticSegments(text, lang),
         lang,
       };
     });
@@ -61,6 +63,10 @@ export function deserializeWords(json: string): DictationWord[] | null {
           lang,
           syllables:
             w.syllables?.length > 0 ? w.syllables : splitSyllables(w.text, lang),
+          phonetics:
+            w.phonetics?.length > 0
+              ? w.phonetics
+              : toPhoneticSegments(w.text, lang),
         };
       });
   } catch {

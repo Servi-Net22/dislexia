@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { DictationWord } from "@/types/dictation";
 import { DictationCard } from "@/components/DictationCard";
 import { ExportPdfButton } from "@/components/ExportPdfButton";
+import { toPhoneticSegments } from "@/lib/phoneticSegments";
 import { preloadPhonemes } from "@/lib/phonemes";
 import { preloadVoices } from "@/lib/speechSync";
 
@@ -19,7 +20,14 @@ export function CardPresentation({ words }: CardPresentationProps) {
   useEffect(() => {
     preloadVoices();
     for (const w of words) {
-      preloadPhonemes([...w.text], w.lang);
+      const segs =
+        w.phonetics?.length > 0
+          ? w.phonetics
+          : toPhoneticSegments(w.text, w.lang);
+      preloadPhonemes(
+        segs.map((s) => s.soundLetter),
+        w.lang,
+      );
     }
   }, [words]);
 

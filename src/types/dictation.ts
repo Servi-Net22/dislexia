@@ -1,9 +1,11 @@
 import type { AppLanguage } from "@/lib/language";
+import type { PhoneticSegment } from "@/lib/phoneticSegments";
 
 export type DictationWord = {
   id: string;
   text: string;
   syllables: string[];
+  phonetics: PhoneticSegment[];
   lang: AppLanguage;
 };
 

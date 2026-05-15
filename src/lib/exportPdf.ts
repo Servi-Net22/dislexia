@@ -1,6 +1,7 @@
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import type { DictationWord } from "@/types/dictation";
+import { toPhoneticSegments } from "@/lib/phoneticSegments";
 import { SYLLABLE_COLORS } from "@/lib/spanishSyllables";
 
 export function buildCardHtml(
@@ -8,35 +9,32 @@ export function buildCardHtml(
   index: number,
   total: number,
 ): string {
-  const syllableHtml = word.syllables
-    .map((syllable, sIdx) => {
-      const color = SYLLABLE_COLORS[sIdx % SYLLABLE_COLORS.length];
-      const chars = [...syllable]
-        .map(
-          (ch) =>
-            `<span style="color:${color};font-size:56px;font-weight:bold;letter-spacing:0.12em;font-family:OpenDyslexic,'Segoe UI',sans-serif">${ch}</span>`,
-        )
-        .join("");
-      return `<span style="display:inline-flex;background:rgba(255,255,255,0.5);border-radius:12px;padding:4px 12px;margin:0 4px">${chars}</span>`;
+  const lang = word.lang ?? "es";
+  const phonetics =
+    word.phonetics?.length > 0
+      ? word.phonetics
+      : toPhoneticSegments(word.text, lang);
+
+  const rowStyle =
+    "width:100%;padding:10px 16px;margin:6px 0;border-radius:14px;border:2px solid #fff;background:rgba(255,255,255,0.65);font-size:22px;font-weight:bold;font-family:OpenDyslexic,sans-serif;letter-spacing:-0.02em;overflow:hidden;white-space:nowrap";
+
+  const phoneticHtml = phonetics
+    .map((seg, idx) => {
+      const color = SYLLABLE_COLORS[idx % SYLLABLE_COLORS.length];
+      return `<div style="${rowStyle};color:${color}">${seg.display}</div>`;
     })
     .join("");
 
-  const letters = [...word.text]
-    .map(
-      (l, i) =>
-        `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:52px;margin:4px;border:2px solid #fff;border-radius:12px;background:rgba(255,255,255,0.7);color:${SYLLABLE_COLORS[i % SYLLABLE_COLORS.length]};font-size:28px;font-weight:bold;font-family:OpenDyslexic,sans-serif">${l}</span>`,
-    )
-    .join("");
+  const title = lang === "en" ? "Phonetic dictation" : "Dictado fonético";
 
-  return `
-    <article style="position:relative;width:700px;min-height:420px;padding:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:4px solid #bae6fd;border-radius:24px;background:linear-gradient(180deg,#f8f4e8,#eef6fa);font-family:OpenDyslexic,'Segoe UI',sans-serif;box-sizing:border-box">
-      <span style="position:absolute;top:16px;right:16px;background:#e0f2fe;color:#0c4a6e;padding:4px 12px;border-radius:999px;font-size:14px;font-weight:600">${index + 1} / ${total}</span>
-      <p style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:0.2em;color:#0369a1">Dictado</p>
-      <div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;margin:16px 0">${syllableHtml}</div>
-      <div style="display:flex;flex-wrap:wrap;justify-content:center;margin-top:24px">${letters}</div>
-      <p style="margin-top:24px;font-size:18px;color:#0369a1;font-weight:600">${word.text}</p>
-    </article>
-  `;
+  return [
+    '<article style="position:relative;width:700px;min-height:420px;padding:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:4px solid #bae6fd;border-radius:24px;background:linear-gradient(180deg,#f8f4e8,#eef6fa);font-family:OpenDyslexic,\'Segoe UI\',sans-serif;box-sizing:border-box">',
+    `<span style="position:absolute;top:16px;right:16px;background:#e0f2fe;color:#0c4a6e;padding:4px 12px;border-radius:999px;font-size:14px;font-weight:600">${index + 1} / ${total}</span>`,
+    `<p style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:0.2em;color:#0369a1">${title}</p>`,
+    `<p style="font-size:42px;font-weight:bold;color:#0c4a6e;margin:8px 0">${word.text}</p>`,
+    `<div style="width:90%;max-width:520px">${phoneticHtml}</div>`,
+    "</article>",
+  ].join("");
 }
 
 export async function exportDictationToPdf(

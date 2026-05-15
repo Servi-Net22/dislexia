@@ -97,8 +97,8 @@ export function HomeWorkspace() {
           )}
           <ul className="rounded-xl bg-sky-50/80 px-4 py-3 text-sm text-sky-800">
             <li>· Auto: palabras con ñ/acentos → español; solo letras latinas → inglés</li>
-            <li>· Toca cada letra para el fonema (MP3) en su idioma</li>
-            <li>· Escuchar palabra usa la voz del sistema en ES o EN</li>
+            <li>· Cada fila repite el sonido (dddd, aaaa) — no deletreo D-A-D</li>
+            <li>· Toca una fila para escuchar ese fonema</li>
           </ul>
         </aside>
       </div>
