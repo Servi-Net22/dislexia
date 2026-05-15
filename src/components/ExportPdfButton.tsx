@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import type { DictationWord } from "@/types/dictation";
-import { exportDictationToPdf } from "@/lib/exportPdf";
 
 type ExportPdfButtonProps = {
   words: DictationWord[];
@@ -15,6 +14,7 @@ export function ExportPdfButton({ words }: ExportPdfButtonProps) {
     if (words.length === 0) return;
     setLoading(true);
     try {
+      const { exportDictationToPdf } = await import("@/lib/exportPdf");
       await exportDictationToPdf(words);
     } finally {
       setLoading(false);

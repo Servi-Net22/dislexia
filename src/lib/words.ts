@@ -51,14 +51,18 @@ export function deserializeWords(json: string): DictationWord[] | null {
     if (!Array.isArray(parsed)) return null;
     return parsed
       .filter((w) => w?.text && Array.isArray(w.syllables))
-      .map((w) => ({
-        ...w,
-        lang: w.lang ?? detectWordLanguage(w.text),
-        syllables:
-          w.syllables?.length > 0
-            ? w.syllables
-            : splitSyllables(w.text, w.lang ?? detectWordLanguage(w.text)),
-      }));
+      .map((w) => {
+        const lang =
+          w.lang === "en" || w.lang === "es"
+            ? w.lang
+            : detectWordLanguage(w.text);
+        return {
+          ...w,
+          lang,
+          syllables:
+            w.syllables?.length > 0 ? w.syllables : splitSyllables(w.text, lang),
+        };
+      });
   } catch {
     return null;
   }
