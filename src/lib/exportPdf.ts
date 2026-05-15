@@ -8,7 +8,6 @@ export function buildCardHtml(
   index: number,
   total: number,
 ): string {
-  let letterStart = 0;
   const syllableHtml = word.syllables
     .map((syllable, sIdx) => {
       const color = SYLLABLE_COLORS[sIdx % SYLLABLE_COLORS.length];
@@ -18,7 +17,6 @@ export function buildCardHtml(
             `<span style="color:${color};font-size:56px;font-weight:bold;letter-spacing:0.12em;font-family:OpenDyslexic,'Segoe UI',sans-serif">${ch}</span>`,
         )
         .join("");
-      letterStart += syllable.length;
       return `<span style="display:inline-flex;background:rgba(255,255,255,0.5);border-radius:12px;padding:4px 12px;margin:0 4px">${chars}</span>`;
     })
     .join("");

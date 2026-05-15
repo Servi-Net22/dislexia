@@ -1,7 +1,10 @@
+import type { AppLanguage } from "@/lib/language";
+
 export type DictationWord = {
   id: string;
   text: string;
   syllables: string[];
+  lang: AppLanguage;
 };
 
 export const STORAGE_KEY = "dislexia-dictation-words";

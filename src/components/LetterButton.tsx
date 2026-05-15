@@ -1,15 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import type { AppLanguage } from "@/lib/language";
 import { speakLetter } from "@/lib/speech";
 
 type LetterButtonProps = {
   letter: string;
+  lang: AppLanguage;
   color: string;
   size?: "md" | "lg";
 };
 
-export function LetterButton({ letter, color, size = "lg" }: LetterButtonProps) {
+export function LetterButton({
+  letter,
+  lang,
+  color,
+  size = "lg",
+}: LetterButtonProps) {
   const [playing, setPlaying] = useState(false);
 
   const dim =
@@ -17,19 +24,16 @@ export function LetterButton({ letter, color, size = "lg" }: LetterButtonProps) 
       ? "min-h-[3.25rem] min-w-[2.75rem] text-3xl sm:min-h-[3.75rem] sm:min-w-[3.25rem] sm:text-4xl"
       : "min-h-10 min-w-9 text-xl";
 
-  const handleClick = async () => {
+  const handleClick = () => {
     setPlaying(true);
-    try {
-      await speakLetter(letter);
-    } finally {
-      setPlaying(false);
-    }
+    speakLetter(letter, lang);
+    window.setTimeout(() => setPlaying(false), 400);
   };
 
   return (
     <button
       type="button"
-      onClick={() => void handleClick()}
+      onClick={handleClick}
       className={`${dim} font-dyslexic flex cursor-pointer items-center justify-center rounded-xl border-2 border-white/80 bg-white/70 font-bold shadow-sm transition-all hover:scale-105 hover:shadow-md active:scale-95 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-sky-600 ${
         playing ? "ring-2 ring-sky-400" : ""
       }`}

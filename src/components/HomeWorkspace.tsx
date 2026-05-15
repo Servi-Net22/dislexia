@@ -3,9 +3,14 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImageUploadZone } from "@/components/ImageUploadZone";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { WordListEditor } from "@/components/WordListEditor";
 import { DictationCard } from "@/components/DictationCard";
 import { STORAGE_KEY, WORDS_UPDATED_EVENT } from "@/types/dictation";
+import {
+  LANG_MODE_KEY,
+  type LanguageMode,
+} from "@/lib/language";
 import { parseWordsFromText, toDictationWords, serializeWords } from "@/lib/words";
 
 const SAMPLE_WORDS = "casa\nperro\nárbol\nsol\nmar";
@@ -13,10 +18,21 @@ const SAMPLE_WORDS = "casa\nperro\nárbol\nsol\nmar";
 export function HomeWorkspace() {
   const router = useRouter();
   const [rawText, setRawText] = useState(SAMPLE_WORDS);
+  const [languageMode, setLanguageMode] = useState<LanguageMode>(() => {
+    if (typeof window === "undefined") return "auto";
+    const saved = sessionStorage.getItem(LANG_MODE_KEY);
+    if (saved === "es" || saved === "en" || saved === "auto") return saved;
+    return "auto";
+  });
+
+  const handleLanguageChange = (mode: LanguageMode) => {
+    setLanguageMode(mode);
+    sessionStorage.setItem(LANG_MODE_KEY, mode);
+  };
 
   const words = useMemo(
-    () => toDictationWords(parseWordsFromText(rawText)),
-    [rawText],
+    () => toDictationWords(parseWordsFromText(rawText), languageMode),
+    [rawText, languageMode],
   );
 
   const preview = words[0];
@@ -35,15 +51,17 @@ export function HomeWorkspace() {
           Cartas de dictado adaptadas
         </h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-sky-800/90">
-          Sube una foto de la tarea escolar o escribe las palabras. Generamos
-          cartas con tipografía OpenDyslexic, sílabas en color y audio por
-          fonema al tocar cada letra.
+          Sube una foto o escribe palabras en español o inglés. Cada carta usa
+          fonemas y voz en el idioma correcto (automático o manual).
         </p>
       </section>
+
+      <LanguageSelector value={languageMode} onChange={handleLanguageChange} />
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-6">
           <ImageUploadZone
+            languageMode={languageMode}
             onTextExtracted={(text) => {
               const extracted = parseWordsFromText(text);
               if (extracted.length) {
@@ -78,10 +96,9 @@ export function HomeWorkspace() {
             </p>
           )}
           <ul className="rounded-xl bg-sky-50/80 px-4 py-3 text-sm text-sky-800">
-            <li>· Fuente OpenDyslexic (peso visual en la base de letras)</li>
-            <li>· Sílabas coloreadas para facilitar la lectura</li>
-            <li>· Toca cada letra para escuchar su fonema</li>
-            <li>· Exporta todas las cartas a PDF en el visor</li>
+            <li>· Auto: palabras con ñ/acentos → español; solo letras latinas → inglés</li>
+            <li>· Toca cada letra para el fonema (MP3) en su idioma</li>
+            <li>· Escuchar palabra usa la voz del sistema en ES o EN</li>
           </ul>
         </aside>
       </div>

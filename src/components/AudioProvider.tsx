@@ -11,7 +11,9 @@ type AudioProviderProps = {
 export function AudioProvider({ children }: AudioProviderProps) {
   useEffect(() => {
     preloadVoices();
-    preloadPhonemes("abcdefghijklmnñopqrstuvwxyz".split(""));
+    const letters = "abcdefghijklmnopqrstuvwxyz".split("");
+    preloadPhonemes(letters, "es");
+    preloadPhonemes(letters, "en");
   }, []);
 
   useEffect(() => {

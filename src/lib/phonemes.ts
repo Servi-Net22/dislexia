@@ -1,4 +1,5 @@
-/** Mapeo letra → archivo de fonema en /public/audio/fonemas/ */
+import type { AppLanguage } from "@/lib/language";
+
 const LETTER_TO_PHONEME_FILE: Record<string, string> = {
   a: "a",
   á: "a",
@@ -35,7 +36,6 @@ const LETTER_TO_PHONEME_FILE: Record<string, string> = {
   z: "z",
 };
 
-const audioCache = new Map<string, HTMLAudioElement>();
 let audioUnlocked = false;
 let activeAudio: HTMLAudioElement | null = null;
 
@@ -44,7 +44,6 @@ export function normalizeLetterKey(letter: string): string | null {
   return LETTER_TO_PHONEME_FILE[key] ?? null;
 }
 
-/** Desbloquea audio en el navegador (requiere gesto del usuario). */
 export async function unlockAudio(): Promise<void> {
   if (audioUnlocked || typeof window === "undefined") return;
 
@@ -54,46 +53,49 @@ export async function unlockAudio(): Promise<void> {
   silent.volume = 0.01;
   try {
     await silent.play();
+    silent.pause();
     audioUnlocked = true;
   } catch {
-    /* se reintentará en el primer clic */
+    /* reintento en el clic */
   }
 }
 
-function getAudio(fileKey: string): HTMLAudioElement {
-  let audio = audioCache.get(fileKey);
-  if (!audio) {
-    audio = new Audio(`/audio/fonemas/${fileKey}.mp3`);
-    audio.preload = "auto";
-    audioCache.set(fileKey, audio);
-  }
-  return audio;
+function phonemeUrl(lang: AppLanguage, fileKey: string): string {
+  return `/audio/fonemas/${lang}/${fileKey}.mp3`;
 }
 
-export function preloadPhonemes(letters: string[]): void {
+export function preloadPhonemes(letters: string[], lang: AppLanguage): void {
   if (typeof window === "undefined") return;
   for (const letter of letters) {
     const key = normalizeLetterKey(letter);
-    if (key) getAudio(key);
+    if (key) {
+      const audio = new Audio(phonemeUrl(lang, key));
+      audio.preload = "auto";
+    }
   }
 }
 
-/** Reproduce el fonema de una letra (MP3 local). */
-export async function playPhoneme(letter: string): Promise<boolean> {
+export async function playPhoneme(
+  letter: string,
+  lang: AppLanguage,
+): Promise<boolean> {
   if (typeof window === "undefined") return false;
-
-  await unlockAudio();
 
   const fileKey = normalizeLetterKey(letter);
   if (!fileKey) return false;
+
+  if (lang === "es" && fileKey === "enie") {
+    /* ok */
+  } else if (lang === "en" && fileKey === "enie") {
+    return false;
+  }
 
   if (activeAudio) {
     activeAudio.pause();
     activeAudio = null;
   }
 
-  const audio = new Audio(`/audio/fonemas/${fileKey}.mp3`);
-  audio.preload = "auto";
+  const audio = new Audio(phonemeUrl(lang, fileKey));
   activeAudio = audio;
 
   try {
@@ -105,8 +107,4 @@ export async function playPhoneme(letter: string): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-export function hasPhonemeAudio(letter: string): boolean {
-  return normalizeLetterKey(letter) !== null;
 }

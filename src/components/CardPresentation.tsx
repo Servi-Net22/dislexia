@@ -18,8 +18,9 @@ export function CardPresentation({ words }: CardPresentationProps) {
 
   useEffect(() => {
     preloadVoices();
-    const letters = words.flatMap((w) => [...w.text]);
-    preloadPhonemes(letters);
+    for (const w of words) {
+      preloadPhonemes([...w.text], w.lang);
+    }
   }, [words]);
 
   const goPrev = useCallback(() => {

@@ -1,5 +1,5 @@
 /**
- * Genera MP3 de fonemas en public/audio/fonemas/
+ * Genera MP3 de fonemas en public/audio/fonemas/{es|en}/
  * Ejecutar: npm run generate:phonemes
  */
 import gtts from "google-tts-api";
@@ -8,27 +8,29 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OUT_DIR = path.join(__dirname, "../public/audio/fonemas");
+const BASE = path.join(__dirname, "../public/audio/fonemas");
 
-const FILES = [
+const LETTERS = [
   "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
-  "enie", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+  "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
 ];
 
-const TEXT = {
-  enie: "ñ",
-};
+async function generate(lang, outDir, textMap = {}) {
+  await mkdir(outDir, { recursive: true });
+  const files = lang === "es" ? [...LETTERS, "enie"] : LETTERS;
 
-await mkdir(OUT_DIR, { recursive: true });
-
-for (const file of FILES) {
-  const text = TEXT[file] ?? file;
-  const url = gtts.getAudioUrl(text, { lang: "es", slow: false });
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Error ${file}: ${res.status}`);
-  const buf = Buffer.from(await res.arrayBuffer());
-  await writeFile(path.join(OUT_DIR, `${file}.mp3`), buf);
-  console.log(`ok ${file}.mp3`);
+  for (const file of files) {
+    const text = textMap[file] ?? file;
+    const url = gtts.getAudioUrl(text, { lang, slow: false });
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`${lang}/${file}: ${res.status}`);
+    const buf = Buffer.from(await res.arrayBuffer());
+    await writeFile(path.join(outDir, `${file}.mp3`), buf);
+    console.log(`ok ${lang}/${file}.mp3`);
+  }
 }
 
-console.log(`\n${FILES.length} archivos en public/audio/fonemas/`);
+await generate("es", path.join(BASE, "es"), { enie: "ñ" });
+await generate("en", path.join(BASE, "en"));
+
+console.log("\nFonemas listos en public/audio/fonemas/es y /en");

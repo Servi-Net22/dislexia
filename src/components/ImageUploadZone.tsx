@@ -1,14 +1,17 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import type { LanguageMode } from "@/lib/language";
 import { extractTextFromImage } from "@/lib/ocr";
 
 type ImageUploadZoneProps = {
+  languageMode?: LanguageMode;
   onTextExtracted: (text: string) => void;
   disabled?: boolean;
 };
 
 export function ImageUploadZone({
+  languageMode = "auto",
   onTextExtracted,
   disabled = false,
 }: ImageUploadZoneProps) {
@@ -33,7 +36,7 @@ export function ImageUploadZone({
       setPreview(url);
 
       try {
-        const text = await extractTextFromImage(file, setProgress);
+        const text = await extractTextFromImage(file, languageMode, setProgress);
         onTextExtracted(text);
         if (!text.trim()) {
           setError(
@@ -46,7 +49,7 @@ export function ImageUploadZone({
         setLoading(false);
       }
     },
-    [onTextExtracted],
+    [languageMode, onTextExtracted],
   );
 
   const onDrop = (e: React.DragEvent) => {

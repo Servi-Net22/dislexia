@@ -1,95 +1,60 @@
+import type { AppLanguage } from "@/lib/language";
 import { playPhoneme, unlockAudio } from "@/lib/phonemes";
 
 let voicesCache: SpeechSynthesisVoice[] | null = null;
-let voicesReady: Promise<void> | null = null;
+let activeUtterance: SpeechSynthesisUtterance | null = null;
 
-function waitForVoices(): Promise<void> {
-  if (typeof window === "undefined" || !window.speechSynthesis) {
-    return Promise.resolve();
-  }
-
-  if (voicesCache?.length) return Promise.resolve();
-
-  if (!voicesReady) {
-    voicesReady = new Promise((resolve) => {
-      const load = () => {
-        voicesCache = window.speechSynthesis.getVoices();
-        if (voicesCache.length > 0) {
-          resolve();
-          return true;
-        }
-        return false;
-      };
-
-      if (load()) return;
-
-      const onVoices = () => {
-        if (load()) {
-          window.speechSynthesis.removeEventListener("voiceschanged", onVoices);
-        }
-      };
-      window.speechSynthesis.addEventListener("voiceschanged", onVoices);
-
-      window.setTimeout(() => {
-        load();
-        resolve();
-      }, 500);
-    });
-  }
-
-  return voicesReady;
+function loadVoices(): SpeechSynthesisVoice[] {
+  if (typeof window === "undefined" || !window.speechSynthesis) return [];
+  voicesCache = window.speechSynthesis.getVoices();
+  return voicesCache;
 }
 
-function getSpanishVoice(): SpeechSynthesisVoice | undefined {
-  if (!voicesCache?.length) return undefined;
+function getVoice(lang: AppLanguage): SpeechSynthesisVoice | undefined {
+  const voices = voicesCache?.length ? voicesCache : loadVoices();
+  const prefix = lang === "en" ? "en" : "es";
   return (
-    voicesCache.find((v) => v.lang.startsWith("es")) ??
-    voicesCache.find((v) => v.lang.includes("ES")) ??
-    voicesCache[0]
+    voices.find((v) => v.lang.toLowerCase().startsWith(prefix)) ??
+    voices[0]
   );
 }
 
-export async function speakText(text: string, rate = 0.85): Promise<void> {
+export function preloadVoices(): void {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  loadVoices();
+  window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+}
+
+/** TTS síncrono en el clic (funciona en iOS/Safari y producción). */
+export function speakTextSync(text: string, lang: AppLanguage, rate = 0.85): void {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
 
-  await unlockAudio();
-  await waitForVoices();
-
   const synth = window.speechSynthesis;
+  synth.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang === "en" ? "en-US" : "es-ES";
+  utterance.rate = rate;
+  const voice = getVoice(lang);
+  if (voice) utterance.voice = voice;
+
+  activeUtterance = utterance;
+  utterance.onend = () => {
+    if (activeUtterance === utterance) activeUtterance = null;
+  };
   synth.resume();
+  synth.speak(utterance);
+}
 
-  return new Promise((resolve) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "es-ES";
-    utterance.rate = rate;
-    const voice = getSpanishVoice();
-    if (voice) utterance.voice = voice;
-
-    utterance.onend = () => resolve();
-    utterance.onerror = () => resolve();
-
-    synth.cancel();
-    window.setTimeout(() => {
-      synth.resume();
-      synth.speak(utterance);
-    }, 80);
+export function speakLetter(letter: string, lang: AppLanguage): void {
+  void unlockAudio();
+  void playPhoneme(letter, lang).then((played) => {
+    if (!played) speakTextSync(letter, lang, 0.75);
   });
 }
 
-/** Fonema (MP3) con respaldo a TTS del nombre de la letra. */
-export async function speakLetter(letter: string): Promise<void> {
-  const played = await playPhoneme(letter);
-  if (!played) {
-    const name = letter.toLowerCase();
-    await speakText(name === "ñ" ? "eñe" : name, 0.7);
-  }
-}
-
-export async function speakWord(word: string): Promise<void> {
-  await speakText(word, 0.8);
-}
-
-export function preloadVoices(): void {
-  if (typeof window === "undefined") return;
-  void waitForVoices();
+/** Escuchar palabra completa (síncrono en el gesto del usuario). */
+export function speakWord(word: string, lang: AppLanguage): void {
+  void unlockAudio();
+  speakTextSync(word, lang, 0.82);
 }

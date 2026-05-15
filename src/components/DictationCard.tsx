@@ -1,6 +1,7 @@
 "use client";
 
 import type { DictationWord } from "@/types/dictation";
+import { languageLabel } from "@/lib/language";
 import { SYLLABLE_COLORS } from "@/lib/spanishSyllables";
 import { speakWord } from "@/lib/speech";
 import { LetterButton } from "@/components/LetterButton";
@@ -26,12 +27,17 @@ export function DictationCard({
         compact ? "p-6" : "min-h-[min(70vh,520px)] p-8 sm:p-12"
       }`}
     >
-      <span className="absolute right-4 top-4 rounded-full bg-sky-100 px-3 py-1 text-sm font-semibold text-sky-800">
-        {index + 1} / {total}
+      <span className="absolute right-4 top-4 flex gap-2">
+        <span className="rounded-full bg-violet-100 px-2 py-1 text-xs font-semibold text-violet-800">
+          {languageLabel(word.lang)}
+        </span>
+        <span className="rounded-full bg-sky-100 px-3 py-1 text-sm font-semibold text-sky-800">
+          {index + 1} / {total}
+        </span>
       </span>
 
       <p className="mb-2 text-center text-sm font-medium uppercase tracking-widest text-sky-700/80">
-        Dictado
+        {word.lang === "en" ? "Dictation" : "Dictado"}
       </p>
 
       <WordDisplay word={word} />
@@ -41,6 +47,7 @@ export function DictationCard({
           <LetterButton
             key={`${word.id}-${i}-${letter}`}
             letter={letter}
+            lang={word.lang}
             color={SYLLABLE_COLORS[i % SYLLABLE_COLORS.length]}
           />
         ))}
@@ -48,11 +55,11 @@ export function DictationCard({
 
       <button
         type="button"
-        onClick={() => void speakWord(word.text)}
+        onClick={() => speakWord(word.text, word.lang)}
         className="mt-8 flex items-center gap-2 rounded-full bg-sky-600 px-6 py-3 text-lg font-semibold text-white shadow-md transition hover:bg-sky-700 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
       >
         <SpeakerIcon />
-        Escuchar palabra
+        {word.lang === "en" ? "Listen to word" : "Escuchar palabra"}
       </button>
     </article>
   );
