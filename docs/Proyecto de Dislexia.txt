@@ -1,0 +1,7 @@
+Proyecto de Dislexia
+
+Quiero realizar una web en la que se pueda subir distintas imágenes de tareas escolares, como dictados de palabras, que las genere como para un niño con dislexia, respetando los modelos de la web https://opendyslexic.org/, https://dislexiacampus.com.ar/.
+Creando como la web https://genially.com/.
+
+Asimismo que esas placas/cartas con las palabras para el dictado, tengan sonidos de las letras.
+

@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@import "@fontsource/opendyslexic/400.css";
+@import "@fontsource/opendyslexic/700.css";
+
+:root {
+  --background: #eef6fa;
+  --foreground: #0c3d52;
+  --card-cream: #f8f4e8;
+  --accent: #0284c7;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-dyslexic: "OpenDyslexic", "Segoe UI", system-ui, sans-serif;
+  --font-sans: var(--font-dyslexic);
+}
+
+body {
+  background: linear-gradient(160deg, #eef6fa 0%, #f5f0e6 45%, #eef6fa 100%);
+  color: var(--foreground);
+  font-family: var(--font-dyslexic);
+  min-height: 100vh;
+}
+
+.font-dyslexic {
+  font-family: var(--font-dyslexic);
+  letter-spacing: 0.04em;
+}
