@@ -46,7 +46,7 @@ export function ImageUploadZone({
           );
         } else {
           setHint(
-            "Revisa la lista y corrige si hace falta. Mejor foto: buena luz, texto grande, sin inclinar.",
+            "Revisa la lista y corrige si hace falta. Con cartas en inglés elige «English». Foto: buena luz, palabra arriba y centrada.",
           );
         }
       } catch {

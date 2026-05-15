@@ -1,6 +1,5 @@
 import type { LanguageMode } from "@/lib/language";
 
-/** Une "D A D" → "DAD" cuando OCR separa letras. */
 function joinSpacedLetters(line: string): string {
   const parts = line.trim().split(/\s+/).filter(Boolean);
   if (parts.length >= 2 && parts.every((p) => p.length === 1)) {
@@ -9,25 +8,47 @@ function joinSpacedLetters(line: string): string {
   return line.trim();
 }
 
-/** Corrige confusiones frecuentes en palabras en mayúsculas (cartas didácticas). */
-function fixCommonUppercaseMisreads(word: string): string {
-  if (!/^[A-Z]{2,6}$/.test(word)) return word;
+const OCR_CHAR_FIX: Record<string, string> = {
+  "0": "O",
+  "1": "I",
+  "|": "I",
+  "¡": "I",
+  "¿": "",
+};
 
-  const fixes: [RegExp, string][] = [
-    [/^J([AEIOU])$/i, "D$1"],
-    [/^J([A-Z])$/i, "D$1"],
-    [/^JP$/i, "DAD"],
-    [/^JE$/i, "DAD"],
-    [/^0/g, "O"],
-    [/^1/g, "I"],
-    [/\|/g, "I"],
-  ];
+function fixChar(ch: string): string {
+  return OCR_CHAR_FIX[ch] ?? ch;
+}
 
-  let w = word.toUpperCase();
-  for (const [re, rep] of fixes) {
-    w = w.replace(re, rep);
-  }
-  return w;
+/** Corrige lecturas típicas en palabras MAYÚSCULAS de cartas. */
+function fixUppercaseWord(word: string): string {
+  const w = word
+    .toUpperCase()
+    .split("")
+    .map(fixChar)
+    .join("")
+    .replace(/[^A-Z]/g, "");
+
+  const known: Record<string, string> = {
+    AA: "DAD",
+    AAA: "DAD",
+    JP: "DAD",
+    JE: "DAD",
+    Jp: "DAD",
+    DaD: "DAD",
+    OAD: "DAD",
+    BAD: "DAD",
+    AAD: "DAD",
+  };
+
+  return known[w] ?? w;
+}
+
+function isEnglishMode(mode: LanguageMode, lines: string[]): boolean {
+  return (
+    mode === "en" ||
+    (mode === "auto" && lines.every((l) => /^[A-Za-z'-]+$/.test(l)))
+  );
 }
 
 export function cleanupOcrText(
@@ -37,34 +58,42 @@ export function cleanupOcrText(
   const lines = raw
     .split(/\r?\n/)
     .map((l) => joinSpacedLetters(l))
-    .map((l) => l.replace(/[|_]/g, "I").trim())
+    .map((l) => l.trim())
     .filter((l) => l.length > 0);
 
-  const english =
-    mode === "en" ||
-    (mode === "auto" && lines.every((l) => /^[A-Za-z'-]+$/.test(l)));
+  const english = isEnglishMode(mode, lines);
 
-  const cleaned = lines.map((line) => {
-    const word = line.replace(/\s+/g, "");
-    return english ? fixCommonUppercaseMisreads(word) : word;
+  let tokens = lines.flatMap((line) => {
+    const compact = line.replace(/\s+/g, "");
+    if (!compact) return [];
+    return [compact];
   });
 
-  const unique = [...new Set(cleaned.filter((w) => w.length >= 1))];
+  if (english) {
+    tokens = tokens
+      .map((t) => fixUppercaseWord(t))
+      .filter((t) => t.length >= 2 || (t.length === 1 && t === t.toUpperCase()));
+    tokens = tokens.filter((t) => !/^[a-z]$/.test(t));
+  }
 
-  if (english && unique.length > 1) {
+  const unique = [...new Set(tokens)];
+
+  if (english && unique.length > 0) {
     const scored = unique
       .map((w) => ({
         w,
         score:
-          w.length * 10 +
-          (w === w.toUpperCase() ? 5 : 0) -
-          (/^[Jj][pe]$/i.test(w) ? 20 : 0),
+          w.length * 15 +
+          (w === w.toUpperCase() ? 10 : 0) -
+          (/^[Aa]{1,3}$/.test(w) ? 5 : 0),
       }))
       .sort((a, b) => b.score - a.score);
 
     const best = scored[0]?.w;
-    if (best && best.length >= 2 && scored[0].score > (scored[1]?.score ?? 0) + 5) {
-      return best;
+    if (best && best.length >= 2) {
+      if (unique.length === 1 || (scored[0].score - (scored[1]?.score ?? 0)) >= 8) {
+        return best;
+      }
     }
   }
 
